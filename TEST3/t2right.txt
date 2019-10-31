@@ -1,0 +1,123 @@
+ 
+;*****************************************
+datasg  segment para    'data'  
+  string1   db  'Enter keyword:$'
+  string2   db  'Enter sentence:$'
+  temp db  13,10,'$'
+  num db ?,13,10,'$'
+;
+  mess1   db  'Match at location:',?,?,' H of the sentence',13,10,'$'
+  mess2   db    'No match.',13,10,'$'  
+;定义相关变量
+keyword     label   byte
+    maxk     db      5
+    actk     db      ?           
+    keyd   db      5 dup(?)    
+sentence     label   byte
+    maxs     db      10
+    acts     db      ?           
+    sente   db      10 dup(?)   
+datasg  ends
+;*****************************************
+codesg  segment para    'code'
+        assume  cs:codesg,ds:datasg,es:datasg
+;-----------------------------------------
+main    proc    far
+        push    ds
+        sub     ax,ax
+        push    ax
+        
+        mov     ax,datasg
+        mov     ds,ax
+        mov     es,ax
+;main part of program goes here
+start:
+        lea     dx,string1 ;提示输入关键字
+        mov     ah,09
+        int     21h
+        lea     dx,keyword 
+        mov     ah,0ah  
+        int     21h
+        cmp     actk,0
+        je      exit
+ 
+        lea     dx,temp ;换行，防止覆盖
+        mov     ah,09
+        int     21h
+ 
+        lea     dx,string2 ;提示输入句子
+        mov     ah,09
+        int     21h
+        lea     dx,sentence
+        mov     ah,0ah  
+        int     21h
+        cmp     acts,0
+        je      exit
+ 
+        lea     dx,temp ;换行，防止覆盖
+        mov     ah,09
+        int     21h
+ 
+ 
+ 
+ 
+ 
+        lea     si,keyd
+        lea     bx,sente
+        mov     di,bx
+        cld
+        mov     ch,0
+        mov     cl,acts  ;句子长度，一个字节
+        sub     cl,actk
+        inc     cx ;比较次数
+ 
+comp:
+        push    cx
+        push    di
+        mov     cl,actk ;关键字长度，一个字节
+        repz    cmpsb  ;如果相等继续比较;64
+        jz      find
+        pop     di
+        pop     cx
+        inc     di
+        lea     si,keyd
+        loop    comp  ;
+ 
+        lea     dx,mess2 ;不匹配
+        mov     ah,09
+        int     21h
+       ; jmp     exit
+ 	jmp	exit
+ 
+find:   
+        pop     di
+        pop     cx
+        sub     di,bx
+        mov     bx,di
+        inc     bx ;得到十进制的位置
+ 
+        mov     ax,bx
+        mov     bh,16
+        div     bh
+        add     al,48
+        add     ah,48
+        mov     [mess1+18],al
+        mov     [mess1+19],ah
+ 
+ 
+        lea     dx,mess1 ;输出
+        mov     ah,09
+        int     21h
+        jmp     start
+ 
+ 
+exit:
+    ret                 ;return to DOS
+main    endp
+;-------------------------------------------
+codesg  ends            ;end of segment
+;*******************************************
+        end     main    ;end assembly
+ 
+ 
+ 
